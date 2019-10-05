@@ -12,7 +12,7 @@
 
 ## Script for Final Fantasy XIV Chocobo Racing
 
- - To change your key of skills, please edit line 54 of Chocobo_Racing.py. If you don't need to use them, please edit it as 'None'.
+ - To change your key of skills, please edit line 54 of Chocobo_Racing.py. If you don't need to use them, please edit them as 'None'.
  - Using ‘Up’ key and ‘Left’ key for running as a default.
  - It could recognize the size of your widgets in FFXIV.
  - Only running in the 'main road of the wilds' for recommended.
