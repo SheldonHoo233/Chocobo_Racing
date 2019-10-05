@@ -16,7 +16,7 @@
  - If you don't need to use them, please edit them as 'None'.
  - Using ‘Up’ key and ‘Left’ key for running as defaults.
  - The script could recognize the size of your widgets in FFXIV.
- - Only running in the 'main road of the wilds' for recommended.
+ - Only running in the 'Sagolii Road' for recommended.
  - To readapt the size of your widgets in FFXIV, you should delete 'data' folder.
  - Folders as ‘report’ and ‘temp’ could be deleted as you like.
  - Temporary screenshots: data/screenshot.bmp, data/screenshot.jpg
