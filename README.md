@@ -1,6 +1,6 @@
 ## 最终幻想XIV 陆行鸟竞赛 脚本
 
- - 在Chocobo_Racing.py 第54行更改你的技能按键，如果不用则填‘None’
+ - 在Chocobo_Racing.py 第52行更改你的技能按键，如果不用则填‘None’
  - 默认Up和Left移动
  -  自动识别游戏控件大小
  - 建议仅荒野大道使用
@@ -12,7 +12,7 @@
 
 ## Script for Final Fantasy XIV Chocobo Racing
 
- - To change your key of skills, please edit line 54 of Chocobo_Racing.py.
+ - To change your key of skills, please edit line 52 of Chocobo_Racing.py.
  - If you don't need to use them, please edit them as 'None'.
  - Using ‘Up’ key and ‘Left’ key for running as defaults.
  - The script could recognize the size of your widgets in FFXIV.
