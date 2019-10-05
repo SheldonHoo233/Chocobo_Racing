@@ -1,0 +1,7 @@
+# Project exclude paths
+/venv/
+# Default ignored files
+/test.py
+/data/
+/report/
+/temp/
