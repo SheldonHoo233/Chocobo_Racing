@@ -12,11 +12,13 @@
 
 ## Script for Final Fantasy XIV Chocobo Racing
 
- - To change your key of skills, please edit line 54 of Chocobo_Racing.py. If you don't need to use them, please edit them as 'None'.
+ - To change your key of skills, please edit line 54 of Chocobo_Racing.py.
+   If you don't need to use them, please edit them as 'None'.
  - Using ‘Up’ key and ‘Left’ key for running as defaults.
  - It could recognize the size of your widgets in FFXIV.
  - Only running in the 'main road of the wilds' for recommended.
- - Folder: To readapt the size of your widgets in FFXIV, you should delete 'data' folder. Folder as ‘report’ and ‘temp’ could be deleted as you like.
- - Temporary screenshots: data/screenshot.bmp、data/screenshot.jpg
+ - Folder: To readapt the size of your widgets in FFXIV, you should delete 'data' folder.
+   Folder as ‘report’ and ‘temp’ could be deleted as you like.
+ - Temporary screenshots: data/screenshot.bmp, data/screenshot.jpg
  - Crash screenshots: report/screenshot.bmp
- - Data log: report/log.txt (Turn, ranking, total experience, additional experience,  coin)
+ - Data log: report/log.txt  (Turn, ranking, total experience, additional experience,  coin)
