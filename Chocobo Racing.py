@@ -403,7 +403,7 @@ def recording_the_results():
 
     # 读取出错截图
     if ranking * exp * coin == 0:
-        pyautogui.screenshot().save('report/%s[%d].jpg' % (time.strftime('%Y%m%d_%H%M%S', time.localtime()), turn))
+        pyautogui.screenshot().save('report/%s[%d].bmp' % (time.strftime('%Y%m%d_%H%M%S', time.localtime()), turn))
     state = 6
 
 
