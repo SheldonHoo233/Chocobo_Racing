@@ -45,11 +45,9 @@ state = 1
 turn = 0
 first = True
 skip = False
-unskilled_fpx = 0
-unskilled_fpy = 0
-unskilled_height = 0
-unskilled_width = 0
-unskilled_template = None
+unskilled_x = 0
+unskilled_y = 0
+unskilled_color = (0, 0, 0)
 # 设定陆行鸟技能按键,不使用起步超级冲刺时,二技能填'None'
 skill_list = ['q', 'None', 'None']
 ranking_list = []
@@ -163,7 +161,7 @@ def recognize_rewards():
     # 获得个十百千数字坐标
     exp1_pos_list = [(fpx - 1, fpy + 23), (fpx - 9, fpy + 23), (fpx - 17, fpy + 23), (fpx - 29, fpy + 23)]
     coin_pos_list = [(fpx + 81, fpy + 23), (fpx + 73, fpy + 23), (fpx + 65, fpy + 23), (fpx + 53, fpy + 23)]
-    if compare_handle_without_capture('data/reward[2].png', True) > 0.7:
+    if compare_handle_without_capture('data/reward[2].png', True) > 0.6:
         exp2_pos_list = [(fpx + 44, fpy + 23), (fpx + 36, fpy + 23), (fpx + 28, fpy + 23), (fpx + 16, fpy + 23)]
         exp2_exist = True
     else:
@@ -171,7 +169,7 @@ def recognize_rewards():
     # 千位只包含1, 2, 3
     arr = numpy.array([1, 2, 3])
     # 判断普通经验个十百千
-    for i in range(0, 3):
+    for i in range(0, 4):
         fpx, fpy = exp1_pos_list[i]
         region = get_pic_from_pic(fpx, fpy, width, height, target)
         # 判断数字
@@ -185,7 +183,7 @@ def recognize_rewards():
                 exp1 = exp1 + j * pow(10, i)
                 break
     # 判断金蝶币个十百千
-    for i in range(0, 3):
+    for i in range(0, 4):
         fpx, fpy = coin_pos_list[i]
         region = get_pic_from_pic(fpx, fpy, width, height, target)
         # 判断数字
@@ -200,7 +198,7 @@ def recognize_rewards():
                 break
     if exp2_exist:
         # 判断额外经验个十百千
-        for i in range(0, 3):
+        for i in range(0, 4):
             fpx, fpy = exp2_pos_list[i]
             region = get_pic_from_pic(fpx, fpy, width, height, target)
             # 判断数字
@@ -271,7 +269,7 @@ def ready_to_queue():
 
 # 排本中
 def waiting_for_queue(timeout=35, interval=1):
-    global state, skip, hwnd, fpx, fpy, unskilled_fpx, unskilled_fpy, unskilled_height, unskilled_width, unskilled_template
+    global state, skip, hwnd, fpx, fpy, unskilled_x, unskilled_y, unskilled_color
     state_start_time = time.time()
     while compare_handle('data/attend.png') <= 0.5:
         # 超时
@@ -301,10 +299,13 @@ def waiting_for_queue(timeout=35, interval=1):
         time.sleep(interval)
     # 获取1技能的位置、宽、长
     hwnd = win32gui.FindWindow(None, '最终幻想XIV')
-    unskilled_template = cv2.imread('data/unskilled.png')
-    target = cv2.imread('data/screenshot.jpg')
-    unskilled_fpx, unskilled_fpy = find_picture(unskilled_template, target)
-    unskilled_height, unskilled_width = unskilled_template.shape[:2]
+    window_capture_exact('data/screenshot.bmp')
+    template = cv2.imread('data/unskilled.png')
+    target = cv2.imread('data/screenshot.bmp')
+    fpx, fpy = find_picture(template, target)
+    height, width = template.shape[:2]
+    unskilled_x, unskilled_y = (int(fpx + width / 2), int(fpy + height / 2))
+    unskilled_color = pyautogui.pixel(unskilled_x, unskilled_y)
     state = 3
 
 
@@ -328,7 +329,7 @@ def waiting_for_race_begin(timeout=100, interval=1):
 
 # 比赛开始到结束退本
 def chocobo_run(timeout=200, interval=1):
-    global state, unskilled_fpx, unskilled_fpy, unskilled_height, unskilled_width
+    global state, unskilled_x, unskilled_y, unskilled_color
     state_start_time = time.time()
     # 使用2技能,起步冲刺
     if skill_list[1] != 'None':
@@ -349,10 +350,8 @@ def chocobo_run(timeout=200, interval=1):
             if skill_list[2] != 'None':
                 my_keypress(skill_list[2])
             finished = True
-        # 按Q使用第一个技能
-        target = cv2.imread('data/screenshot.jpg')
-        region = get_pic_from_pic(unskilled_fpx, unskilled_fpy, unskilled_width, unskilled_height, target)
-        if compare_picture(unskilled_template, region) <= 0.15:
+        # 按Q使用1技能
+        if not pyautogui.pixelMatchesColor(unskilled_x, unskilled_y, unskilled_color, tolerance=10):
             my_keypress(skill_list[0])
         # 超时
         if time.time() - state_start_time > timeout:
