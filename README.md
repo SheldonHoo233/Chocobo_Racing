@@ -8,8 +8,8 @@
  - 临时截图：data/screenshot.bmp、data/screenshot.jpg
  - 错误截图：report/screenshot.bmp
  - 数据日志：report/log.txt（比赛轮次、名次、总经验、额外经验、金蝶币）
-</br>
-</br>
+
+
 ## Script for Final Fantasy XIV Chocobo Racing
 
  - To change your key of skills, please edit line 54 of Chocobo_Racing.py. If you don't need to use them, please edit it as 'None'.
