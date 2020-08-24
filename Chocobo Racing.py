@@ -9,6 +9,7 @@ import shutil
 import time
 
 import PIL
+import keyboard
 import numpy
 import pyautogui
 
@@ -20,22 +21,31 @@ if not os.path.exists('report'):
     os.mkdir('report')
 if not os.path.exists('temp'):
     os.mkdir('temp')
+time.sleep(1)
 
 # 提示运行状态
 SYSTEM_STATE = {
     -1: '已掉线',
-    0: '已暂停',
+    0: '\n使用menu键暂停了脚本……',
     1: '游戏运行中,准备排本',
     2: '副本队列中,等待确认',
     3: '已确认进入副本,等待赛鸟开始',
     4: '比赛进行中……',
     5: '已退出副本,记录比赛数据',
-    6: '准备下一轮赛鸟\n',
-    7: '超时异常,重新判定状态',
+    6: '超时异常,重新判定状态',
 }
 
-print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
-time.sleep(2)
+pyautogui.keyUp('left')
+pyautogui.keyUp('up')
+pyautogui.press('capslock')
+print('按住menu键开始运行脚本')
+while True:
+    # 按menu键开始运行脚本
+    if keyboard.is_pressed('menu'):
+        pyautogui.press('capslock')
+        break
+    time.sleep(1)
+print('\n' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
 # 获得游戏句柄和左上角坐标
 hwnd = win32gui.FindWindow(None, '最终幻想XIV')
 
@@ -49,7 +59,7 @@ unskilled_x = 0
 unskilled_y = 0
 unskilled_color = (0, 0, 0)
 # 设定陆行鸟技能按键,不使用起步超级冲刺时,二技能填'None'
-skill_list = ['q', 'None', 'None']
+skill_list = ['q', 'None', 'w']
 ranking_list = []
 exp_list = []
 coin_list = []
@@ -116,6 +126,7 @@ def profiles(template_without_path):
         for i in range(1, 10):
             os.remove('temp/%s[%d].png' % (template_without_path, i))
         print('选择: %d%%' % int(scale_list[numpy.argmax(similar)] * 100))
+        time.sleep(1)
 
 
 # 获取竞赛名次
@@ -222,7 +233,23 @@ def my_keypress(key):
     pyautogui.keyDown(key)
     time.sleep(random.random() / 10)
     pyautogui.keyUp(key)
-    time.sleep(0.1 + random.random() / 10)
+    time.sleep(0.2 + random.random() / 10)
+
+
+def pause_and_restart():
+    global state
+    pyautogui.keyUp('left')
+    pyautogui.keyUp('up')
+    time.sleep(3)
+    while True:
+        # 按menu键重启
+        if keyboard.is_pressed('menu'):
+            pyautogui.press('capslock')
+            print('重启脚本……')
+            print('\n' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
+            state = 1
+            break
+        time.sleep(5)
 
 
 def ready_to_queue():
@@ -232,6 +259,11 @@ def ready_to_queue():
         time.sleep(5)
     while compare_handle('data/main.png') <= 0.5:
         time.sleep(5)
+        # 按menu键暂停
+        if keyboard.is_pressed('menu'):
+            pyautogui.press('capslock')
+            state = 0
+            return
     # 首次运行:取消任务选择,判断金蝶币图标,判断任务说明
     my_keypress('num1')
     my_keypress('esc')
@@ -268,14 +300,14 @@ def ready_to_queue():
 
 
 # 排本中
-def waiting_for_queue(timeout=35, interval=1):
+def waiting_for_queue(timeout=35, interval=2):
     global state, skip, hwnd, fpx, fpy, unskilled_x, unskilled_y, unskilled_color
     state_start_time = time.time()
-    while compare_handle('data/attend.png') <= 0.5:
+    while compare_handle('data/attend.png') <= 0.7:
         # 超时
         if time.time() - state_start_time > timeout:
             break
-        time.sleep(interval)
+        time.sleep(1)
     my_keypress('num4')
     my_keypress('num0')
 
@@ -294,9 +326,9 @@ def waiting_for_queue(timeout=35, interval=1):
     while compare_handle('data/power.png') <= 0.5:
         # 超时
         if time.time() - state_start_time > timeout:
-            state = 7
+            state = 6
             break
-        time.sleep(interval)
+        time.sleep(1)
     # 获取1技能的位置、宽、长
     hwnd = win32gui.FindWindow(None, '最终幻想XIV')
     window_capture_exact('data/screenshot.bmp')
@@ -310,17 +342,18 @@ def waiting_for_queue(timeout=35, interval=1):
 
 
 # 进入赛鸟场,等待比赛开始
-def waiting_for_race_begin(timeout=100, interval=1):
+def waiting_for_race_begin(timeout=100):
     global state, skip, hwnd
     state_start_time = time.time()
     hwnd = win32gui.FindWindow(None, '最终幻想XIV')
-    useless1, useless2, dx, dy = win32gui.GetClientRect(hwnd)
+    x1, y1 = win32gui.ClientToScreen(hwnd, (0, 0))
+    _, _, dx, dy = win32gui.GetClientRect(hwnd)
     dx = int(970 * dx / 1920)
     dy = int(459 * dy / 1080)
-    while not skip and not pyautogui.pixelMatchesColor(dx, dy, (118, 146, 41), tolerance=10):
+    while not skip and not pyautogui.pixelMatchesColor(x1 + dx, y1 + dy, (118, 146, 41), tolerance=10):
         # 超时
         if time.time() - state_start_time > timeout:
-            state = 7
+            state = 6
             break
     if skip:
         skip = False
@@ -328,7 +361,7 @@ def waiting_for_race_begin(timeout=100, interval=1):
 
 
 # 比赛开始到结束退本
-def chocobo_run(timeout=200, interval=1):
+def chocobo_run(timeout=200, interval=2):
     global state, unskilled_x, unskilled_y, unskilled_color
     state_start_time = time.time()
     # 使用2技能,起步冲刺
@@ -337,36 +370,59 @@ def chocobo_run(timeout=200, interval=1):
             my_keypress(skill_list[1])
             if time.time() - state_start_time > 3:
                 break
-    else:
-        pyautogui.keyDown('up')
-    time.sleep(4 + random.random() * 4)
+    pyautogui.keyDown('up')
+    time.sleep(7)
     pyautogui.keyDown('left')
-    finished = False
+    finished = 0
     # 竞赛过程中
     while compare_handle('data/result.png') <= 0.8:
-        # 第一次松开左键,并使用3技能
-        if time.time() - state_start_time > 12 and not finished:
+        # 按menu键暂停
+        if keyboard.is_pressed('menu'):
+            pyautogui.press('capslock')
+            state = 0
+            return
+        # 第一次松开左键,往右跑一点
+        if time.time() - state_start_time > 13 and finished == 0:
             pyautogui.keyUp('left')
+            time.sleep(3)
+            pyautogui.keyDown('right')
+            time.sleep(0.1)
+            pyautogui.keyUp('right')
+            finished = 1
+        # 使用3技能
+        if time.time() - state_start_time > 30 and finished == 1:
             if skill_list[2] != 'None':
                 my_keypress(skill_list[2])
-            finished = True
-        # 按Q使用1技能
+            finished = 2
+        # 往左跑一点
+        if time.time() - state_start_time > 38 and finished == 2:
+            if skill_list[2] != 'None':
+                my_keypress(skill_list[2])
+            pyautogui.keyDown('left')
+            time.sleep(1)
+            pyautogui.keyUp('left')
+            finished = 3
+            interval = 5
+        # 使用1技能
         if not pyautogui.pixelMatchesColor(unskilled_x, unskilled_y, unskilled_color, tolerance=10):
             my_keypress(skill_list[0])
         # 超时
         if time.time() - state_start_time > timeout:
-            if skill_list[1] == 'None':
-                pyautogui.keyUp('up')
-            state = 7
+            pyautogui.keyUp('up')
+            state = 6
             break
         time.sleep(interval)
-    if skill_list[1] == 'None':
-        pyautogui.keyUp('up')
+    pyautogui.keyUp('up')
     while compare_handle('data/exit.png', True) <= 0.9:
+        # 按menu键暂停
+        if keyboard.is_pressed('menu'):
+            pyautogui.press('capslock')
+            state = 0
+            return
         # 超时
         if time.time() - state_start_time > timeout:
             break
-        time.sleep(interval)
+        time.sleep(2)
     my_keypress('num0')
     my_keypress('num0')
     state = 5
@@ -396,26 +452,17 @@ def recording_the_results():
         print('获得了%d金碟币。(平均:%d 共计:%d)' % (coin, sum(coin_list) / len(coin_list), sum(coin_list)))
 
     file = open('report/log.txt', 'a')
-    file.write(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()) + '[%d]: %d,%d(%d),%d\n' % (
-        turn, ranking, exp, exp2, coin))
+    try:
+        file.write(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()) + '[%d]: %d,%d(+%d%%),%d,%d,%d\n' % (
+            turn, ranking, exp, round(100 * exp2 / exp), sum(exp_list), coin, sum(coin_list)))
+    except ZeroDivisionError:
+        file.write(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()) + '[%d]: %d,%d(+%d%%),%d,%d,%d\n' % (
+            turn, ranking, exp, 0, sum(exp_list), coin, sum(coin_list)))
     file.close()
-
     # 读取出错截图
     if ranking * exp * coin == 0:
         pyautogui.screenshot().save('report/%s[%d].bmp' % (time.strftime('%Y%m%d_%H%M%S', time.localtime()), turn))
-    state = 6
-
-
-def waiting_for_return(timeout=60, interval=1):
-    global state
-    state_start_time = time.time()
-    # 返回主界面
-    while compare_handle('data/main.png') <= 0.5:
-        # 超时
-        if time.time() - state_start_time > timeout:
-            state = 7
-            break
-        time.sleep(interval)
+    print('\n' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
     state = 1
 
 
@@ -424,6 +471,11 @@ def timeout():
     time.sleep(100)
     # 不在主界面
     while compare_handle('data/main.png') <= 0.5:
+        # 按menu键暂停
+        if keyboard.is_pressed('menu'):
+            pyautogui.press('capslock')
+            state = 0
+            return
         # 掉线重连
         if compare_handle('data/offline.png') > 0.5:
             my_keypress('0')
@@ -451,13 +503,16 @@ def timeout():
             my_keypress('num0')
             time.sleep(60)
         first = True
+    print('\n' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
     state = 1
 
 
 def loop():
     while True:
         print(SYSTEM_STATE[state])
-        if state == 1:
+        if state == 0:
+            pause_and_restart()
+        elif state == 1:
             ready_to_queue()
         elif state == 2:
             waiting_for_queue()
@@ -468,9 +523,6 @@ def loop():
         elif state == 5:
             recording_the_results()
         elif state == 6:
-            waiting_for_return()
-            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
-        elif state == 7:
             timeout()
         else:
             time.sleep(1)
